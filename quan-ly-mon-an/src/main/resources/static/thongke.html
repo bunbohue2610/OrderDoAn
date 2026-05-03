@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Thống Kê • Smart POS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        :root {
+            --sidebar-bg: #0b0f19;
+            --sidebar-active: #f97316;
+            --accent: #f97316;
+            --card-bg: #ffffff;
+            --page-bg: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.03);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+            --transition: 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            --font: 'Be Vietnam Pro', sans-serif;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: var(--page-bg);
+            font-family: var(--font);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+        /* ─── SIDEBAR ─── */
+        #sidebar {
+            width:260px; min-height:100vh;
+            background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+            color:#fff; display:flex; flex-direction:column; padding:28px 16px;
+            position:sticky; top:0; height:100vh; overflow-y:auto;
+            box-shadow:4px 0 20px rgba(0,0,0,0.2);
+        }
+        .sidebar-logo { text-align:center; padding-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px; }
+        .sidebar-logo .logo-icon { font-size:2.2rem; display:block; margin-bottom:4px; }
+        .sidebar-logo h4 { font-size:1.1rem; font-weight:800; letter-spacing:0.05em; color:var(--accent); margin:0; }
+        .admin-badge { background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px; margin-bottom:24px; text-align:center; }
+        .admin-badge small { color:#94a3b8; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; display:block; }
+        .admin-badge span { color:#fff; font-weight:700; font-size:0.9rem; }
+        .nav-section-label { color:#4b5563; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; font-weight:700; padding:0 10px; margin:18px 0 8px; }
+        .sidebar .nav-link {
+            color:#94a3b8; padding:11px 16px; font-size:0.875rem; font-weight:600;
+            border-radius:12px; margin-bottom:2px; transition:all 0.2s;
+            display:flex; align-items:center; gap:10px; cursor:pointer; text-decoration:none;
+        }
+        .sidebar .nav-link:hover { background:rgba(255,255,255,0.05); color:#fff; }
+        .sidebar .nav-link.active { background:var(--accent); color:#fff; }
+        .sidebar .nav-link.text-warning { color:#fbbf24 !important; }
+        .sidebar .nav-link.danger { color:#f87171; }
+        .sidebar .nav-link.danger:hover { background:rgba(239,68,68,0.12); }
+
+        /* ─── MAIN ─── */
+        #content { flex:1; padding:32px 32px 32px 28px; min-width:0; }
+        .page-header h2 {
+            font-size:1.6rem; font-weight:800;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .page-header .subtitle { color:var(--text-muted); font-size:0.85rem; }
+
+        /* TAB SWITCHER */
+        .tab-switcher {
+            display:inline-flex; background:white; border:1.5px solid var(--border);
+            border-radius:16px; padding:4px; gap:2px; margin-bottom:28px;
+        }
+        .tab-btn {
+            padding:10px 24px; border-radius:12px; border:none; background:transparent;
+            font-family:var(--font); font-weight:700; font-size:0.875rem;
+            color:var(--text-muted); cursor:pointer; transition:var(--transition);
+        }
+        .tab-btn.active { background:var(--accent); color:white; box-shadow:0 4px 12px rgba(249,115,22,0.3); }
+        .tab-btn:hover:not(.active) { background:#f8fafc; color:var(--text-main); }
+
+        /* STATS */
+        .stat-grid {
+            display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px;
+        }
+        .stat-card {
+            background:white; border-radius:var(--radius-lg); padding:22px 24px;
+            border:1px solid var(--border); transition:box-shadow 0.2s; box-shadow:var(--shadow-sm);
+            display:flex; flex-direction:column; gap:8px;
+        }
+        .stat-card:hover { box-shadow:var(--shadow-md); }
+        .sc-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; margin-bottom:10px; }
+        .ic-orange { background:#fff7ed; color:#f97316; }
+        .ic-green  { background:#f0fdf4; color:#10b981; }
+        .ic-blue   { background:#eff6ff; color:#3b82f6; }
+        .ic-purple { background:#f5f3ff; color:#8b5cf6; }
+        .sc-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); }
+        .sc-value { font-size:1.5rem; font-weight:800; color:var(--text-main); line-height:1.1; }
+        .sc-sub { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+
+        /* SECTION */
+        .section-card {
+            background:var(--card-bg); border-radius:var(--radius-xl);
+            box-shadow:var(--shadow-sm), 0 8px 30px rgba(0,0,0,0.04);
+            margin-bottom:28px; border:1px solid rgba(255,255,255,0.4);
+        }
+        .section-header {
+            padding:20px 24px; border-bottom:1px solid var(--border);
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+        }
+        .section-header h5 { font-weight:800; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; margin:0; }
+        .section-body { padding:24px; }
+
+        .filter-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .filter-bar input, .filter-bar select {
+            padding:8px 14px; border-radius:10px; border:1.5px solid var(--border);
+            font-family:var(--font); font-size:0.85rem; font-weight:600; color:var(--text-main);
+            background:white; outline:none;
+        }
+        .filter-bar input:focus, .filter-bar select:focus { border-color:var(--accent); }
+
+        .chart-wrap { position:relative; width:100%; height:320px; }
+
+        /* TABLE */
+        .table th {
+            font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:700;
+            color:var(--text-muted); border-bottom:2px solid var(--border); padding:12px 16px;
+        }
+        .table td { padding:12px 16px; vertical-align:middle; border-bottom:1px solid #f1f5f9; font-size:0.875rem; }
+        .table tbody tr:hover { background:#f8fafc; }
+
+        /* TOP MON */
+        .top-mon-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #f1f5f9; }
+        .top-mon-item:last-child { border-bottom:none; }
+        .top-mon-rank { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; }
+        .rank-1 { background:#fef9c3; color:#854d0e; }
+        .rank-2 { background:#f1f5f9; color:#475569; }
+        .rank-3 { background:#fff7ed; color:#9a3412; }
+        .rank-n { background:#f9fafb; color:#9ca3af; }
+        .top-mon-name { flex:1; font-weight:700; font-size:0.875rem; }
+        .top-mon-bar-wrap { width:120px; height:6px; background:#f3f4f6; border-radius:3px; overflow:hidden; }
+        .top-mon-bar { height:100%; border-radius:3px; background:var(--accent); transition:width 0.6s ease; }
+        .top-mon-val { font-weight:800; font-size:0.875rem; color:var(--accent); white-space:nowrap; min-width:90px; text-align:right; }
+
+        /* BUTTONS */
+        .btn-accent { background:var(--accent); color:white; border:none; font-weight:700; border-radius:12px; }
+        .btn-accent:hover { background:#ea580c; color:white; }
+        .btn-neutral { background:#f1f5f9; color:#334155; border:none; font-weight:600; border-radius:12px; }
+        .btn-neutral:hover { background:#e2e8f0; }
+
+        /* MODAL POPUP */
+        .modal-content { border-radius:var(--radius-xl); border:none; box-shadow:0 25px 50px rgba(0,0,0,0.2); }
+        .noti-icon { font-size:3rem; margin-bottom:12px; }
+        .noti-icon.success { color:#10b981; }
+        .noti-icon.error { color:#ef4444; }
+        .noti-icon.warning { color:#f59e0b; }
+
+        @media (max-width:992px) { .stat-grid { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:768px) {
+            #sidebar { display:none; }
+            #content { padding:16px; }
+            .stat-grid { grid-template-columns:1fr; }
+            .chart-wrap { height:260px; }
+        }
+    </style>
+</head>
+<body>
+<div class="d-flex">
+    <!-- SIDEBAR (đồng bộ với admin) -->
+    <nav id="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-icon">🍳</span>
+            <h4>SMART POS</h4>
+        </div>
+        <div class="admin-badge">
+            <small>Đang quản lý</small>
+            <span id="hien-thi-ten">Quản Lý</span>
+        </div>
+        <div class="nav-section-label">Quản lý</div>
+        <a href="/admin.html" class="nav-link">📊 Sơ đồ bàn</a>
+        <a href="/admin.html#section-mon-an" class="nav-link">🍔 Thực đơn</a>
+        <a href="#" class="nav-link active">📈 Thống kê</a>
+        <div class="nav-section-label mt-3">Hệ thống</div>
+        <a href="/login.html" class="nav-link danger">🚪 Đăng xuất</a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div id="content">
+        <div class="page-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>📈 Thống Kê Doanh Thu</h2>
+                <div class="subtitle">Phân tích doanh thu theo ngày · tháng · quý</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-neutral rounded-pill px-4" onclick="xuatExcel()"><i class="fas fa-download me-1"></i> Xuất Excel</button>
+                <button class="btn btn-accent rounded-pill px-4" onclick="loadCurrentTab()"><i class="fas fa-sync-alt me-1"></i> Làm mới</button>
+            </div>
+        </div>
+
+        <!-- TAB SWITCHER -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" onclick="switchTab('ngay', this)">📅 Theo Ngày</button>
+            <button class="tab-btn" onclick="switchTab('thang', this)">📆 Theo Tháng</button>
+            <button class="tab-btn" onclick="switchTab('quy', this)">🗓️ Theo Quý</button>
+        </div>
+
+        <!-- STATS -->
+        <div class="stat-grid" id="stat-grid">
+            <div class="stat-card"><div class="sc-icon ic-orange"><i class="fas fa-coins"></i></div><div class="sc-label">Tổng doanh thu</div><div class="sc-value" id="sc-tong">—</div><div class="sc-sub" id="sc-tong-sub"></div></div>
+            <div class="stat-card"><div class="sc-icon ic-green"><i class="fas fa-receipt"></i></div><div class="sc-label">Số đơn</div><div class="sc-value" id="sc-don">—</div><div class="sc-sub" id="sc-don-sub"></div></div>
+            <div class="stat-card"><div class="sc-icon ic-blue"><i class="fas fa-chart-line"></i></div><div class="sc-label">TB / Đơn</div><div class="sc-value" id="sc-tb">—</div><div class="sc-sub" id="sc-tb-sub"></div></div>
+            <div class="stat-card"><div class="sc-icon ic-purple"><i class="fas fa-crown"></i></div><div class="sc-label">Ngày cao nhất</div><div class="sc-value" id="sc-max">—</div><div class="sc-sub" id="sc-max-sub"></div></div>
+        </div>
+
+        <!-- BIỂU ĐỒ -->
+        <div class="section-card">
+            <div class="section-header">
+                <h5>📊 Biểu đồ doanh thu</h5>
+                <div class="filter-bar" id="filter-bar"></div>
+            </div>
+            <div class="section-body">
+                <div class="chart-wrap"><canvas id="chartDoanhthu"></canvas></div>
+            </div>
+        </div>
+
+        <!-- BẢNG + TOP MÓN -->
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="section-card h-100">
+                    <div class="section-header"><h5 id="table-title">📋 Chi tiết theo ngày</h5></div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr id="table-head"></tr></thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="section-card h-100">
+                    <div class="section-header"><h5>🏅 Top 10 món bán chạy</h5></div>
+                    <div class="section-body" id="top-mon-list">
+                        <div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm me-2"></div>Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÔNG BÁO (POPUP) -->
+<div class="modal fade" id="modalThongBao" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content text-center p-4">
+            <div class="modal-body">
+                <i id="notiIcon" class="fas fa-check-circle noti-icon success"></i>
+                <h5 id="notiTitle" class="fw-bold mt-2"></h5>
+                <p id="notiMessage" class="text-muted mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button class="btn btn-accent rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL XÁC NHẬN (POPUP CONFIRM) -->
+<div class="modal fade" id="modalXacNhan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content text-center p-4">
+            <div class="modal-body">
+                <i id="confirmIcon" class="fas fa-question-circle noti-icon warning"></i>
+                <h5 id="confirmTitle" class="fw-bold mt-2">Xác nhận</h5>
+                <p id="confirmMessage" class="text-muted mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
+                <button class="btn btn-neutral rounded-pill px-4" id="btnHuyConfirm">Hủy</button>
+                <button class="btn btn-accent rounded-pill px-4" id="btnOKConfirm">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/api-helper.js"></script>
+<script>
+    let currentTab = 'ngay';
+    let chartInstance = null;
+    const fmt = v => new Intl.NumberFormat('vi-VN').format(Math.round(v));
+
+    // ──────────────────── POPUP HELPERS ─────────────────────
+    const notiModal = new bootstrap.Modal(document.getElementById('modalThongBao'));
+    function showNotification(title, message, type = 'success') {
+        const icon = document.getElementById('notiIcon');
+        if (type === 'error') icon.className = 'fas fa-times-circle noti-icon error';
+        else if (type === 'warning') icon.className = 'fas fa-exclamation-triangle noti-icon warning';
+        else icon.className = 'fas fa-check-circle noti-icon success';
+        document.getElementById('notiTitle').innerText = title;
+        document.getElementById('notiMessage').innerText = message;
+        notiModal.show();
+    }
+
+    const confirmModal = new bootstrap.Modal(document.getElementById('modalXacNhan'));
+    let confirmResolve = null;
+    function showConfirm(title, message, type = 'warning') {
+        return new Promise((resolve) => {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            const icon = document.getElementById('confirmIcon');
+            icon.className = 'fas noti-icon ' + (type === 'danger' ? 'fa-times-circle error' : 'fa-question-circle warning');
+            confirmResolve = resolve;
+            confirmModal.show();
+        });
+    }
+    document.getElementById('btnOKConfirm').addEventListener('click', () => {
+        confirmModal.hide();
+        if (confirmResolve) confirmResolve(true);
+    });
+    document.getElementById('btnHuyConfirm').addEventListener('click', () => {
+        confirmModal.hide();
+        if (confirmResolve) confirmResolve(false);
+    });
+    document.getElementById('modalXacNhan').addEventListener('hidden.bs.modal', () => {
+        if (confirmResolve) confirmResolve(false);
+    });
+
+    // ─── TAB SWITCH ───────────────────────────────
+    function switchTab(tab, btn) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderFilterBar();
+        loadCurrentTab();
+    }
+
+    function renderFilterBar() {
+        const bar = document.getElementById('filter-bar');
+        const now = new Date();
+        if (currentTab === 'ngay') {
+            const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            const to = now.toISOString().split('T')[0];
+            bar.innerHTML = `
+                <label style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">Từ</label>
+                <input type="date" id="f-from" value="${from}" onchange="loadCurrentTab()">
+                <label style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">Đến</label>
+                <input type="date" id="f-to" value="${to}" onchange="loadCurrentTab()">`;
+        } else if (currentTab === 'thang') {
+            bar.innerHTML = `
+                <label style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">Năm</label>
+                <select id="f-year" onchange="loadCurrentTab()">
+                    ${[0,1,2].map(i => `<option value="${now.getFullYear()-i}" ${i===0?'selected':''}>${now.getFullYear()-i}</option>`).join('')}
+                </select>`;
+        } else {
+            bar.innerHTML = `
+                <label style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">Năm</label>
+                <select id="f-year-q" onchange="loadCurrentTab()">
+                    ${[0,1,2].map(i => `<option value="${now.getFullYear()-i}" ${i===0?'selected':''}>${now.getFullYear()-i}</option>`).join('')}
+                </select>`;
+        }
+    }
+
+    // ─── LOAD DATA ────────────────────────────────
+    async function loadCurrentTab() {
+        try {
+            if (currentTab === 'ngay') await loadNgay();
+            else if (currentTab === 'thang') await loadThang();
+            else await loadQuy();
+            await loadTopMon();
+        } catch (e) {
+            showNotification('Lỗi tải dữ liệu', e.message || 'Vui lòng thử lại.', 'error');
+        }
+    }
+
+    async function loadNgay() {
+        const from = document.getElementById('f-from')?.value || '';
+        const to = document.getElementById('f-to')?.value || '';
+        const data = await api.thongKeTheoNgay(from, to);
+        renderStats(data, 'ngày', d => d.ngay);
+        renderChart(data.map(d => d.ngay), data.map(d => d.doanhThu), 'bar');
+        renderTable(
+            ['Ngày', 'Doanh thu', 'Số đơn', 'TB/Đơn'],
+            data.map(d => [d.ngay, fmt(d.doanhThu) + ' đ', d.soDon + ' đơn',
+                d.soDon > 0 ? fmt(d.doanhThu / d.soDon) + ' đ' : '—']),
+            'Chi tiết theo ngày'
+        );
+    }
+
+    async function loadThang() {
+        const year = document.getElementById('f-year')?.value || new Date().getFullYear();
+        const data = await api.thongKeTheoThang(year);
+        renderStats(data, 'tháng', d => `T${d.thang}`);
+        renderChart(data.map(d => `Tháng ${d.thang}`), data.map(d => d.doanhThu), 'bar');
+        renderTable(
+            ['Tháng', 'Doanh thu', 'Số đơn', 'TB/Đơn'],
+            data.map(d => [`Tháng ${d.thang}/${year}`, fmt(d.doanhThu) + ' đ', d.soDon + ' đơn',
+                d.soDon > 0 ? fmt(d.doanhThu / d.soDon) + ' đ' : '—']),
+            `Chi tiết theo tháng — ${year}`
+        );
+    }
+
+    async function loadQuy() {
+        const year = document.getElementById('f-year-q')?.value || new Date().getFullYear();
+        const data = await api.thongKeTheoQuy(year);
+        renderStats(data, 'quý', d => `Q${d.quy}`);
+        renderChart(data.map(d => `Quý ${d.quy}`), data.map(d => d.doanhThu), 'bar');
+        const total = data.reduce((s, d) => s + d.doanhThu, 0);
+        renderTable(
+            ['Quý', 'Doanh thu', 'Số đơn', 'TB/Đơn', 'Tỷ lệ'],
+            data.map(d => [
+                `Quý ${d.quy}/${year}`,
+                fmt(d.doanhThu) + ' đ',
+                d.soDon + ' đơn',
+                d.soDon > 0 ? fmt(d.doanhThu / d.soDon) + ' đ' : '—',
+                total > 0 ? (d.doanhThu / total * 100).toFixed(1) + '%' : '—'
+            ]),
+            `Chi tiết theo quý — ${year}`
+        );
+    }
+
+    async function loadTopMon() {
+        let data;
+        if (currentTab === 'ngay') {
+            const from = document.getElementById('f-from')?.value || '';
+            const to = document.getElementById('f-to')?.value || '';
+            data = await api.topMon(from, to, null);
+        } else {
+            const year = currentTab === 'thang'
+                ? (document.getElementById('f-year')?.value || new Date().getFullYear())
+                : (document.getElementById('f-year-q')?.value || new Date().getFullYear());
+            data = await api.topMon(null, null, year);
+        }
+        renderTopMon(data);
+    }
+
+    function buildParams() {
+        if (currentTab === 'ngay') {
+            const from = document.getElementById('f-from')?.value || new Date().toISOString().split('T')[0];
+            const to = document.getElementById('f-to')?.value || new Date().toISOString().split('T')[0];
+            return `from=${from}&to=${to}`;
+        } else if (currentTab === 'thang') {
+            const year = document.getElementById('f-year')?.value || new Date().getFullYear();
+            return `year=${year}`;
+        } else {
+            const year = document.getElementById('f-year-q')?.value || new Date().getFullYear();
+            return `year=${year}`;
+        }
+    }
+
+    // ─── RENDER HELPERS ───────────────────────────
+    function renderStats(data, unit, labelFn) {
+        const tong = data.reduce((s, d) => s + d.doanhThu, 0);
+        const don  = data.reduce((s, d) => s + d.soDon, 0);
+        const tb   = don > 0 ? tong / don : 0;
+        const max  = data.reduce((m, d) => d.doanhThu > m.v ? {v: d.doanhThu, l: labelFn(d)} : m, {v:0, l:'—'});
+
+        document.getElementById('sc-tong').innerText = fmt(tong) + ' đ';
+        document.getElementById('sc-tong-sub').innerText = 'Trong khoảng đã chọn';
+        document.getElementById('sc-don').innerText = don + ' đơn';
+        document.getElementById('sc-don-sub').innerText = `${data.length} ${unit} có dữ liệu`;
+        document.getElementById('sc-tb').innerText = fmt(tb) + ' đ';
+        document.getElementById('sc-tb-sub').innerText = 'Giá trị trung bình / đơn';
+        document.getElementById('sc-max').innerText = fmt(max.v) + ' đ';
+        document.getElementById('sc-max-sub').innerText = max.l;
+    }
+
+    function renderChart(labels, values, type) {
+        if (chartInstance) chartInstance.destroy();
+        const ctx = document.getElementById('chartDoanhthu').getContext('2d');
+        const maxVal = Math.max(...values, 1);
+        chartInstance = new Chart(ctx, {
+            type,
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Doanh thu (đ)',
+                    data: values,
+                    backgroundColor: values.map(v => {
+                        const ratio = v / maxVal;
+                        return `rgba(249,115,22,${0.5 + ratio * 0.4})`;
+                    }),
+                    borderColor: '#f97316',
+                    borderWidth: 1.5,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { family: "'Be Vietnam Pro'", size: 11 }, maxRotation: 45 } },
+                    y: {
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        ticks: {
+                            font: { family: "'Be Vietnam Pro'", size: 11 },
+                            callback: v => (v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v) + ' đ'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTable(headers, rows, title) {
+        document.getElementById('table-title').innerText = '📋 ' + title;
+        document.getElementById('table-head').innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+        if (!rows.length) {
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="${headers.length}" class="text-center text-muted py-4">Không có dữ liệu</td></tr>`;
+            return;
+        }
+        document.getElementById('table-body').innerHTML = rows.map(row => `
+            <tr>
+                ${row.map((cell, ci) => {
+                    if (ci === 0) return `<td class="fw-bold">${cell}</td>`;
+                    if (ci === 1) return `<td style="color:var(--accent);font-weight:800;">${cell}</td>`;
+                    return `<td>${cell}</td>`;
+                }).join('')}
+            </tr>`).join('');
+    }
+
+    function renderTopMon(data) {
+        const container = document.getElementById('top-mon-list');
+        if (!data || !data.length) {
+            container.innerHTML = '<div class="text-center text-muted py-4">Chưa có dữ liệu</div>';
+            return;
+        }
+        const maxQty = Math.max(...data.map(d => d.soLuong), 1);
+        const rankClass = i => i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
+        container.innerHTML = data.slice(0,10).map((d,i) => `
+            <div class="top-mon-item">
+                <div class="top-mon-rank ${rankClass(i)}">${i+1}</div>
+                <div class="top-mon-name">${d.tenMon}</div>
+                <div class="top-mon-bar-wrap"><div class="top-mon-bar" style="width:${(d.soLuong/maxQty*100).toFixed(1)}%"></div></div>
+                <div class="top-mon-val">${fmt(d.doanhThu)} đ</div>
+            </div>`).join('');
+    }
+
+    // ─── EXPORT EXCEL ─────────────────────────────
+    async function xuatExcel() {
+        const ok = await showConfirm('Xuất báo cáo', 'Tải file CSV dữ liệu hiện tại?', 'warning');
+        if (!ok) return;
+        try {
+            const rows = document.querySelectorAll('#table-body tr');
+            const headers = [...document.querySelectorAll('#table-head th')].map(th => th.innerText);
+            const lines = [headers.join(',')];
+            rows.forEach(tr => {
+                lines.push([...tr.querySelectorAll('td')].map(td => `"${td.innerText.replace(/"/g,'""')}"`).join(','));
+            });
+            const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `thong-ke-${currentTab}-${Date.now()}.csv`;
+            link.click();
+            showNotification('Thành công', 'Đã tải file báo cáo!', 'success');
+        } catch (e) {
+            showNotification('Lỗi xuất file', e.message, 'error');
+        }
+    }
+
+    // ─── INIT ─────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        const adminUser = sessionStorage.getItem('adminUser');
+        if (adminUser) {
+            try {
+                const user = JSON.parse(adminUser);
+                document.getElementById('hien-thi-ten').innerText = user.hoTen || user.tenTaiKhoan || 'Quản Lý';
+            } catch(e) { document.getElementById('hien-thi-ten').innerText = 'Quản Lý'; }
+        }
+        renderFilterBar();
+        setTimeout(loadCurrentTab, 100);
+    });
+</script>
+</body>
+</html>

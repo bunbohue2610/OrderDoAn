@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký Quản trị - Smart Restaurant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #0f1117;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+            --page-bg: #f1f4f9;
+            --text-main: #1a1d2e;
+            --text-muted: #6b7280;
+            --card-bg: rgba(255,255,255,0.75);
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: radial-gradient(circle at 90% 10%, #f9fafb, #eef1f5);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.25;
+        }
+        .blob-green  { width: 450px; height: 450px; background: #d1fae5; top: -120px; left: -120px; }
+        .blob-orange { width: 350px; height: 350px; background: #ffedd5; bottom: -100px; right: -80px; }
+
+        .register-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 920px;
+            display: flex;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px -12px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.6);
+            backdrop-filter: blur(16px);
+            background: var(--card-bg);
+        }
+        .register-info {
+            background: var(--sidebar-bg);
+            color: #fff;
+            padding: 48px 36px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 42%;
+        }
+        .register-info .logo-icon { font-size: 3.5rem; margin-bottom: 8px; }
+        .register-info h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
+        .register-info h2 span { color: var(--accent); }
+        .register-info p { color: #9ca3af; font-size: 0.9rem; font-weight: 500; }
+        .register-card {
+            padding: 48px 40px;
+            flex: 1;
+            background: rgba(255,255,255,0.4);
+        }
+        .register-card h3 { font-weight: 800; font-size: 1.6rem; color: var(--text-main); margin-bottom: 28px; }
+        .form-label { font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; }
+        .form-control {
+            border-radius: 14px; padding: 14px 18px; font-weight: 600;
+            border: 1.5px solid #e5e7eb; background: #fff;
+            transition: all 0.2s; font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249,115,22,0.2); }
+        .btn-register {
+            background: var(--success); border: none; color: #fff; font-weight: 700;
+            padding: 13px; border-radius: 14px; transition: all 0.2s; font-size: 1rem; margin-top: 8px;
+        }
+        .btn-register:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16,185,129,0.4); color: #fff; }
+        .link-muted { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-decoration: none; transition: 0.2s; }
+        .link-muted:hover { color: var(--accent); }
+        @media (max-width: 768px) {
+            .register-info { display: none; }
+            .register-wrapper { max-width: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blob blob-green"></div>
+    <div class="bg-blob blob-orange"></div>
+
+    <div class="register-wrapper">
+        <div class="register-info">
+            <div class="logo-icon">📝</div>
+            <h2>Smart<span>POS</span></h2>
+            <p>Tạo tài khoản quản trị để bắt đầu vận hành nhà hàng của bạn.</p>
+        </div>
+        <div class="register-card">
+            <h3>📋 Đăng Ký</h3>
+            <form id="registerForm">
+                <div class="mb-3">
+                    <label class="form-label">Họ và Tên</label>
+                    <input type="text" id="hoTen" class="form-control" placeholder="VD: Nguyễn Văn A" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" id="username" class="form-control" placeholder="VD: admin01" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" id="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required>
+                </div>
+                <div id="thong-bao" class="small mb-3 fw-semibold d-none"></div>
+                <button type="button" class="btn btn-register w-100 mb-3" onclick="xuLyDangKy()">Đăng ký ngay</button>
+                <div class="text-center">
+                    <a href="/login.html" class="link-muted">← Đã có tài khoản? Đăng nhập</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/api-helper.js"></script>
+    <script>
+        async function xuLyDangKy() {
+            const hoTen = document.getElementById('hoTen').value.trim();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+            const thongBao = document.getElementById('thong-bao');
+
+            if (!hoTen || !user || !pass) {
+                thongBao.innerText = 'Vui lòng điền đầy đủ thông tin!';
+                thongBao.className = 'small mb-3 text-danger fw-semibold';
+                return;
+            }
+
+            try {
+                const result = await api.register(user, pass, hoTen);
+                
+                if (result.success) {
+                    thongBao.innerText = '✅ Đăng ký thành công! Đang chuyển hướng...';
+                    thongBao.className = 'small mb-3 text-success fw-semibold';
+                    thongBao.classList.remove('d-none');
+                    setTimeout(() => window.location.href = '/login.html', 1500);
+                } else {
+                    thongBao.innerText = '❌ ' + result.message;
+                    thongBao.className = 'small mb-3 text-danger fw-semibold';
+                    thongBao.classList.remove('d-none');
+                }
+            } catch (error) {
+                thongBao.innerText = 'Lỗi máy chủ, vui lòng thử lại sau!';
+                thongBao.className = 'small mb-3 text-danger fw-semibold';
+                thongBao.classList.remove('d-none');
+            }
+        }
+    </script>
+</body>
+</html>
